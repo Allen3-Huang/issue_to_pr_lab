@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.models import Product, ProductPage
@@ -8,20 +10,21 @@ router = APIRouter(prefix="/products", tags=["products"])
 
 @router.get("", response_model=ProductPage)
 def read_products(
-    q: str | None = Query(default=None, description="Case-insensitive partial name match"),
-    sort_by: SortBy = "id",
-    order: SortOrder = "asc",
-    page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=20, ge=1, le=100),
+    q: Annotated[str | None, Query(description="Case-insensitive partial match on name or category")] = None,
+    sort: Annotated[SortBy | None, Query(description="Sort by name or price")] = None,
+    order: Annotated[SortOrder, Query(description="Sort order: asc or desc")] = "asc",
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=20)] = 20,
 ) -> ProductPage:
     items, total = search_products(
         q=q,
-        sort_by=sort_by,
+        sort_by=sort,
         order=order,
         page=page,
         page_size=page_size,
     )
-    return ProductPage(items=items, total=total, page=page, page_size=page_size)
+    total_pages = max(1, -(-total // page_size))
+    return ProductPage(items=items, total=total, page=page, page_size=page_size, total_pages=total_pages)
 
 
 @router.get("/{product_id}", response_model=Product)

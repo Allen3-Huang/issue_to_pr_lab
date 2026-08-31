@@ -11,28 +11,36 @@ PRODUCTS = [
     Product(id=6, name="ProArt Display PA279CRV", category="Monitor", price=15900),
 ]
 
-SortBy = Literal["id", "name", "price"]
+SortBy = Literal["name", "price"]
 SortOrder = Literal["asc", "desc"]
 
 
 def search_products(
     q: str | None = None,
-    sort_by: SortBy = "id",
+    sort_by: SortBy | None = None,
     order: SortOrder = "asc",
     page: int = 1,
     page_size: int = 20,
 ) -> tuple[list[Product], int]:
     """Return one page of matching products plus the total match count."""
-    matches = PRODUCTS
+    matches = list(PRODUCTS)
     if q:
         needle = q.casefold()
-        matches = [product for product in matches if needle in product.name.casefold()]
+        matches = [
+            product
+            for product in matches
+            if needle in product.name.casefold() or needle in product.category.casefold()
+        ]
 
-    matches = sorted(
-        matches,
-        key=lambda product: getattr(product, sort_by),
-        reverse=order == "desc",
-    )
+    if sort_by is not None:
+        matches = sorted(
+            matches,
+            key=lambda product: getattr(product, sort_by),
+            reverse=order == "desc",
+        )
+
+    start = (page - 1) * page_size
+    return matches[start : start + page_size], len(matches)
 
     start = (page - 1) * page_size
     return matches[start : start + page_size], len(matches)
