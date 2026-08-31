@@ -21,12 +21,15 @@ def search_products(
     order: SortOrder = "asc",
     page: int = 1,
     page_size: int = 20,
+    max_price: float | None = None,
 ) -> tuple[list[Product], int]:
     """Return one page of matching products plus the total match count."""
     matches = PRODUCTS
     if q:
         needle = q.casefold()
         matches = [product for product in matches if needle in product.name.casefold()]
+    if max_price is not None:
+        matches = [product for product in matches if product.price <= max_price]
 
     matches = sorted(
         matches,

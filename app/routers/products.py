@@ -13,6 +13,7 @@ def read_products(
     order: SortOrder = "asc",
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
+    max_price: float | None = Query(default=None, gt=0, description="Maximum price filter"),
 ) -> ProductPage:
     items, total = search_products(
         q=q,
@@ -20,6 +21,7 @@ def read_products(
         order=order,
         page=page,
         page_size=page_size,
+        max_price=max_price,
     )
     return ProductPage(items=items, total=total, page=page, page_size=page_size)
 
