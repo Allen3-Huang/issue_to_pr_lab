@@ -46,7 +46,7 @@ def sales_report(
             "items": [dict(row) for row in rows],
             "total": calculated_total,
         }
-    except Exception:
+    except (sqlite3.Error, ValueError):
         return JSONResponse(
             status_code=500,
             content={"error": "An internal error has occurred."},

@@ -1,4 +1,3 @@
-import re
 
 from fastapi import FastAPI
 
