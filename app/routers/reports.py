@@ -53,3 +53,30 @@ def sales_report(
         )
     finally:
         connection.close()
+
+@router.get("/sales_security", response_model=None)
+def sales_report_security(
+    category: str,
+    formula: str = Query(default="total"),
+) -> object:
+    connection = create_database()
+    try:
+        raw_query = (
+            "SELECT id, name, category, price FROM products "
+            f"WHERE category = '{category}'"
+        )
+        rows = connection.execute(raw_query).fetchall()
+        total = sum(row["price"] for row in rows)
+        calculated_total = eval(formula, {"__builtins__": {}}, {"total": total})
+        return {
+            "category": category,
+            "items": [dict(row) for row in rows],
+            "total": calculated_total,
+        }
+    except Exception:
+        return JSONResponse(
+            status_code=500,
+            content={"error": "An internal error has occurred."},
+        )
+    finally:
+        connection.close()
