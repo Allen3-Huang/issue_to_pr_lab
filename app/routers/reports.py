@@ -53,3 +53,34 @@ def sales_report(
         )
     finally:
         connection.close()
+
+@router.get("/sales_security", response_model=None)
+def sales_report_security(
+    category: str,
+    formula: str = Query(default="total"),
+) -> object:
+    connection = create_database()
+    try:
+        query = "SELECT id, name, category, price FROM products WHERE category = ?"
+        rows = connection.execute(query, (category,)).fetchall()
+        total = sum(row["price"] for row in rows)
+        formula_map = {
+            "total": total,
+            "total_with_tax": total * 1.07,
+            "total_with_discount": total * 0.90,
+        }
+        if formula not in formula_map:
+            raise ValueError("Unsupported formula")
+        calculated_total = formula_map[formula]
+        return {
+            "category": category,
+            "items": [dict(row) for row in rows],
+            "total": calculated_total,
+        }
+    except (sqlite3.Error, ValueError):
+        return JSONResponse(
+            status_code=500,
+            content={"error": "An internal error has occurred."},
+        )
+    finally:
+        connection.close()
